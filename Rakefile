@@ -1,6 +1,11 @@
+require 'rubygems'
+require 'rake'
 require 'rake/gempackagetask'
 require 'hanna/rdoctask'
-require 'spec/rake/spectask'
+require 'rspec/core/rake_task'
+require 'rcov'
+
+task :default => :spec
 
 SPEC = Gem::Specification.new do |gem|
   gem.name = "rcap"
@@ -15,7 +20,6 @@ SPEC = Gem::Specification.new do |gem|
   gem.has_rdoc = true
   gem.extra_rdoc_files = [ "README.rdoc","CHANGELOG.rdoc" ]
   gem.add_dependency( 'assistance' )
-  gem.add_dependency( 'json' )
   gem.add_dependency( 'uuidtools', '>= 2.0.0' )
   gem.description = "A Ruby API providing parsing and generation of CAP(Common Alerting Protocol) messages."
   gem.test_files = Dir.glob("spec/*.rb")
@@ -26,21 +30,25 @@ Rake::GemPackageTask.new(SPEC) do |pkg|
 end
 
 Rake::RDocTask.new do |rdoc|
-  rdoc.main = "README.rdoc"
+  rdoc.main = "README"
   rdoc.rdoc_files.include( "README.rdoc", "CHANGELOG.rdoc", "lib/**/*.rb" )
   rdoc.rdoc_dir = "doc"
   rdoc.title = "RCAP Ruby API"
 end
 
-Spec::Rake::SpecTask.new do |spec|
-  spec.libs = ['lib','spec']
-  spec.warning = true
-  spec.spec_opts = ['--options spec/spec.opts']
+desc "Run RSpec"
+RSpec::Core::RakeTask.new do |t|
+  t.pattern = "./spec/**/*_spec.rb"
+  t.verbose = true
+end
+
+desc "Measure test coverage"
+RSpec::Core::RakeTask.new(:coverage) do |t|
+  t.pattern = "./lib/**/*.rb"
+  t.rcov = true
 end
 
 desc( 'Generate a new tag file' )
 task( :tags ) do |t|
   Kernel.system( 'ctags --recurse lib/* ')
 end
-
-task( :default => :spec )
